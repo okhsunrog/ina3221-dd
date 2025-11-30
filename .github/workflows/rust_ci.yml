@@ -17,9 +17,9 @@ jobs:
       matrix:
         action:
           - command: build
-            args: --release --example test_pmic_async --features defmt
+            args: --release --example test_ina3221_async --features defmt
           - command: build
-            args: --release --example test_pmic_blocking --features defmt
+            args: --release --example test_ina3221_blocking --features defmt
 
           - command: fmt
             args: --all -- --check

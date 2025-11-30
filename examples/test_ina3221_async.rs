@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-use ina3221_dd::{ChannelId, Ina3221Async, Ina3221Error, INA3221_I2C_ADDR_GND};
 use defmt::info;
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
@@ -12,6 +11,7 @@ use esp_hal::{
     time::Rate,
     timer::timg::TimerGroup,
 };
+use ina3221_dd::{ChannelId, INA3221_I2C_ADDR_GND, Ina3221Async, Ina3221Error};
 use panic_rtt_target as _;
 use rtt_target::rtt_init_defmt;
 

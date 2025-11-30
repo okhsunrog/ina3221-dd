@@ -1,13 +1,13 @@
 #![no_std]
 #![no_main]
 
-use ina3221_dd::{ChannelId, Ina3221, Ina3221Error, INA3221_I2C_ADDR_GND};
 use defmt::info;
 use esp_hal::{
     delay::Delay,
     i2c::master::{Config as I2cConfig, Error as I2cError, I2c},
     time::Rate,
 };
+use ina3221_dd::{ChannelId, INA3221_I2C_ADDR_GND, Ina3221, Ina3221Error};
 use panic_rtt_target as _;
 use rtt_target::rtt_init_defmt;
 

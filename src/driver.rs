@@ -28,7 +28,9 @@ where
     ) -> Result<(), Self::Error> {
         let mut buffer = [0u8; 5];
         if (1 + data.len()) > buffer.len() {
-            return Err(Ina3221Error::NotSupported("Write data length exceeds buffer"));
+            return Err(Ina3221Error::NotSupported(
+                "Write data length exceeds buffer",
+            ));
         }
         buffer[0] = address;
         buffer[1..1 + data.len()].copy_from_slice(data);
@@ -70,7 +72,10 @@ where
     /// Get bus voltage for a specific channel in millivolts
     /// INA3221 measures 0-26V range with 8mV LSB resolution
     #[bisync]
-    pub async fn get_bus_voltage_mv(&mut self, channel: ChannelId) -> Result<f32, Ina3221Error<I2CBusErr>> {
+    pub async fn get_bus_voltage_mv(
+        &mut self,
+        channel: ChannelId,
+    ) -> Result<f32, Ina3221Error<I2CBusErr>> {
         let mut op = match channel {
             ChannelId::Channel1 => self.ll.channel_1_bus_voltage(),
             ChannelId::Channel2 => self.ll.channel_2_bus_voltage(),
@@ -95,7 +100,10 @@ where
     /// Get shunt voltage for a specific channel in microvolts
     /// INA3221 measures ±163.8mV range with 40µV LSB resolution
     #[bisync]
-    pub async fn get_shunt_voltage_uv(&mut self, channel: ChannelId) -> Result<f32, Ina3221Error<I2CBusErr>> {
+    pub async fn get_shunt_voltage_uv(
+        &mut self,
+        channel: ChannelId,
+    ) -> Result<f32, Ina3221Error<I2CBusErr>> {
         let mut op = match channel {
             ChannelId::Channel1 => self.ll.channel_1_shunt_voltage(),
             ChannelId::Channel2 => self.ll.channel_2_shunt_voltage(),
@@ -123,7 +131,7 @@ where
     pub async fn get_current_ma(
         &mut self,
         channel: ChannelId,
-        shunt_resistor_mohms: f32
+        shunt_resistor_mohms: f32,
     ) -> Result<f32, Ina3221Error<I2CBusErr>> {
         let shunt_voltage_uv = self.get_shunt_voltage_uv(channel).await?;
 
