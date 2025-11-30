@@ -3,6 +3,7 @@
 
 use defmt::info;
 use esp_hal::{
+    Blocking,
     delay::Delay,
     i2c::master::{Config as I2cConfig, Error as I2cError, I2c},
     time::Rate,
@@ -13,7 +14,7 @@ use rtt_target::rtt_init_defmt;
 
 esp_bootloader_esp_idf::esp_app_desc!();
 
-#[esp_hal::entry]
+#[esp_hal::main]
 fn main() -> ! {
     rtt_init_defmt!();
     info!("Init!");
@@ -36,7 +37,7 @@ fn main() -> ! {
 }
 
 #[rustfmt::skip]
-fn test_ina3221(i2c: I2c<'static>) -> Result<(), Ina3221Error<I2cError>> {
+fn test_ina3221(i2c: I2c<'_, Blocking>) -> Result<(), Ina3221Error<I2cError>> {
     // Create INA3221 instance with default I2C address (0x40)
     let mut ina = Ina3221::new(i2c, INA3221_I2C_ADDR_GND);
 
