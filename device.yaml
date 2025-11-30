@@ -1,0 +1,458 @@
+# INA3221 Triple-Channel, High-Side Current and Bus Voltage Monitor
+# Texas Instruments INA3221 Device Register Map
+# I2C Address: 0x40-0x43 (configurable via A0 pin)
+
+config:
+  register_address_type: u8
+  default_register_access: RO
+  default_byte_order: BE
+
+# =============================================================================
+# Configuration Register
+# =============================================================================
+
+Configuration:
+  # REG00H - Configuration
+  type: register
+  address: 0x00
+  size_bits: 16
+  access: RW
+  reset_value: 0x7127
+  description: "Configuration register - controls operating modes, conversion times, and averaging"
+  fields:
+    reset:
+      base: bool
+      start: 15
+      description: "Reset bit - writing 1 generates system reset (self-clearing)"
+
+    ch1_enable:
+      base: bool
+      start: 14
+      description: "Channel 1 enable (1=enabled, 0=disabled)"
+
+    ch2_enable:
+      base: bool
+      start: 13
+      description: "Channel 2 enable (1=enabled, 0=disabled)"
+
+    ch3_enable:
+      base: bool
+      start: 12
+      description: "Channel 3 enable (1=enabled, 0=disabled)"
+
+    averaging_mode:
+      base: uint
+      start: 9
+      end: 12  # 3 bits (11-9)
+      description: |
+        Averaging mode - number of samples to average:
+        000: 1 sample (default)
+        001: 4 samples
+        010: 16 samples
+        011: 64 samples
+        100: 128 samples
+        101: 256 samples
+        110: 512 samples
+        111: 1024 samples
+
+    vbus_conversion_time:
+      base: uint
+      start: 6
+      end: 9  # 3 bits (8-6)
+      description: |
+        Bus voltage conversion time:
+        000: 140 µs
+        001: 204 µs
+        010: 332 µs
+        011: 588 µs
+        100: 1.1 ms (default)
+        101: 2.116 ms
+        110: 4.156 ms
+        111: 8.244 ms
+
+    vshunt_conversion_time:
+      base: uint
+      start: 3
+      end: 6  # 3 bits (5-3)
+      description: |
+        Shunt voltage conversion time (same values as vbus_conversion_time):
+        000: 140 µs
+        001: 204 µs
+        010: 332 µs
+        011: 588 µs
+        100: 1.1 ms (default)
+        101: 2.116 ms
+        110: 4.156 ms
+        111: 8.244 ms
+
+    operating_mode:
+      base: uint
+      start: 0
+      end: 3  # 3 bits (2-0)
+      description: |
+        Operating mode:
+        000: Power-down
+        001: Shunt voltage, single-shot (triggered)
+        010: Bus voltage, single-shot (triggered)
+        011: Shunt and bus, single-shot (triggered)
+        100: Power-down
+        101: Shunt voltage, continuous
+        110: Bus voltage, continuous
+        111: Shunt and bus, continuous (default)
+
+# =============================================================================
+# Channel 1 Registers
+# =============================================================================
+
+Channel1ShuntVoltage:
+  # REG01H - Channel 1 Shunt Voltage
+  type: register
+  address: 0x01
+  size_bits: 16
+  access: RO
+  reset_value: 0x0000
+  description: "Channel 1 shunt voltage (signed, 40µV LSB, ±163.8mV range)"
+  fields:
+    sign:
+      base: bool
+      start: 15
+      description: "Sign bit (0=positive, 1=negative in twos complement)"
+
+    shunt_data:
+      base: uint
+      start: 3
+      end: 15  # 12 bits (14-3)
+      description: "Shunt voltage data bits (12-bit value, 40µV/LSB)"
+
+Channel1BusVoltage:
+  # REG02H - Channel 1 Bus Voltage
+  type: register
+  address: 0x02
+  size_bits: 16
+  access: RO
+  reset_value: 0x0000
+  description: "Channel 1 bus voltage (signed, 8mV LSB, 0-26V range)"
+  fields:
+    sign:
+      base: bool
+      start: 15
+      description: "Sign bit (0=positive, 1=negative)"
+
+    bus_data:
+      base: uint
+      start: 3
+      end: 15  # 12 bits (14-3)
+      description: "Bus voltage data bits (12-bit value, 8mV/LSB)"
+
+# =============================================================================
+# Channel 2 Registers
+# =============================================================================
+
+Channel2ShuntVoltage:
+  # REG03H - Channel 2 Shunt Voltage
+  type: ref
+  target: Channel1ShuntVoltage
+  description: "Channel 2 shunt voltage"
+  override:
+    type: register
+    address: 0x03
+
+Channel2BusVoltage:
+  # REG04H - Channel 2 Bus Voltage
+  type: ref
+  target: Channel1BusVoltage
+  description: "Channel 2 bus voltage"
+  override:
+    type: register
+    address: 0x04
+
+# =============================================================================
+# Channel 3 Registers
+# =============================================================================
+
+Channel3ShuntVoltage:
+  # REG05H - Channel 3 Shunt Voltage
+  type: ref
+  target: Channel1ShuntVoltage
+  description: "Channel 3 shunt voltage"
+  override:
+    type: register
+    address: 0x05
+
+Channel3BusVoltage:
+  # REG06H - Channel 3 Bus Voltage
+  type: ref
+  target: Channel1BusVoltage
+  description: "Channel 3 bus voltage"
+  override:
+    type: register
+    address: 0x06
+
+# =============================================================================
+# Alert Limit Registers
+# =============================================================================
+
+Channel1CriticalAlertLimit:
+  # REG07H - Channel 1 Critical Alert Limit
+  type: register
+  address: 0x07
+  size_bits: 16
+  access: RW
+  reset_value: 0x7FF8
+  description: "Channel 1 critical alert limit for shunt voltage"
+  fields:
+    limit_data:
+      base: uint
+      start: 3
+      end: 16  # 13 bits (15-3)
+      description: "Critical alert limit value (13-bit, 40µV/LSB)"
+
+Channel1WarningAlertLimit:
+  # REG08H - Channel 1 Warning Alert Limit
+  type: ref
+  target: Channel1CriticalAlertLimit
+  description: "Channel 1 warning alert limit"
+  override:
+    type: register
+    address: 0x08
+    reset_value: 0x7FF8
+
+Channel2CriticalAlertLimit:
+  # REG09H - Channel 2 Critical Alert Limit
+  type: ref
+  target: Channel1CriticalAlertLimit
+  description: "Channel 2 critical alert limit"
+  override:
+    type: register
+    address: 0x09
+    reset_value: 0x7FF8
+
+Channel2WarningAlertLimit:
+  # REG0AH - Channel 2 Warning Alert Limit
+  type: ref
+  target: Channel1CriticalAlertLimit
+  description: "Channel 2 warning alert limit"
+  override:
+    type: register
+    address: 0x0A
+    reset_value: 0x7FF8
+
+Channel3CriticalAlertLimit:
+  # REG0BH - Channel 3 Critical Alert Limit
+  type: ref
+  target: Channel1CriticalAlertLimit
+  description: "Channel 3 critical alert limit"
+  override:
+    type: register
+    address: 0x0B
+    reset_value: 0x7FF8
+
+Channel3WarningAlertLimit:
+  # REG0CH - Channel 3 Warning Alert Limit
+  type: ref
+  target: Channel1CriticalAlertLimit
+  description: "Channel 3 warning alert limit"
+  override:
+    type: register
+    address: 0x0C
+    reset_value: 0x7FF8
+
+# =============================================================================
+# Summation Registers
+# =============================================================================
+
+ShuntVoltageSum:
+  # REG0DH - Shunt Voltage Sum
+  type: register
+  address: 0x0D
+  size_bits: 16
+  access: RO
+  reset_value: 0x0000
+  description: "Sum of enabled shunt voltages (signed, 40µV LSB)"
+  fields:
+    sign:
+      base: bool
+      start: 15
+      description: "Sign bit (0=positive, 1=negative)"
+
+    sum_data:
+      base: uint
+      start: 1
+      end: 15  # 14 bits (14-1)
+      description: "Summed shunt voltage value (14-bit, 40µV/LSB)"
+
+ShuntVoltageSumLimit:
+  # REG0EH - Shunt Voltage Sum Limit
+  type: register
+  address: 0x0E
+  size_bits: 16
+  access: RW
+  reset_value: 0x7FFE
+  description: "Shunt voltage sum limit"
+  fields:
+    sign:
+      base: bool
+      start: 15
+      description: "Sign bit"
+
+    limit_data:
+      base: uint
+      start: 1
+      end: 15  # 14 bits (14-1)
+      description: "Sum limit value (14-bit, 40µV/LSB)"
+
+# =============================================================================
+# Mask/Enable Register
+# =============================================================================
+
+MaskEnable:
+  # REG0FH - Mask/Enable
+  type: register
+  address: 0x0F
+  size_bits: 16
+  access: RW
+  reset_value: 0x0002
+  description: "Alert configuration, status, and summation control"
+  fields:
+    sum_control_ch1:
+      base: bool
+      start: 14
+      description: "Channel 1 summation control (1=enabled)"
+
+    sum_control_ch2:
+      base: bool
+      start: 13
+      description: "Channel 2 summation control (1=enabled)"
+
+    sum_control_ch3:
+      base: bool
+      start: 12
+      description: "Channel 3 summation control (1=enabled)"
+
+    warning_alert_enable:
+      base: bool
+      start: 11
+      description: "Warning alert enable (1=enabled)"
+
+    critical_alert_enable:
+      base: bool
+      start: 10
+      description: "Critical alert enable (1=enabled)"
+
+    critical_flag_ch1:
+      base: bool
+      start: 9
+      description: "Channel 1 critical alert flag (read-only)"
+
+    critical_flag_ch2:
+      base: bool
+      start: 8
+      description: "Channel 2 critical alert flag (read-only)"
+
+    critical_flag_ch3:
+      base: bool
+      start: 7
+      description: "Channel 3 critical alert flag (read-only)"
+
+    summation_flag:
+      base: bool
+      start: 6
+      description: "Summation alert flag (read-only)"
+
+    warning_flag_ch1:
+      base: bool
+      start: 5
+      description: "Channel 1 warning alert flag (read-only)"
+
+    warning_flag_ch2:
+      base: bool
+      start: 4
+      description: "Channel 2 warning alert flag (read-only)"
+
+    warning_flag_ch3:
+      base: bool
+      start: 3
+      description: "Channel 3 warning alert flag (read-only)"
+
+    power_valid_flag:
+      base: bool
+      start: 2
+      description: "Power-valid alert flag (read-only)"
+
+    timing_control_flag:
+      base: bool
+      start: 1
+      description: "Timing control flag (read-only)"
+
+    conversion_ready_flag:
+      base: bool
+      start: 0
+      description: "Conversion ready flag (read-only)"
+
+# =============================================================================
+# Power Valid Limit Registers
+# =============================================================================
+
+PowerValidUpperLimit:
+  # REG10H - Power-Valid Upper Limit
+  type: register
+  address: 0x10
+  size_bits: 16
+  access: RW
+  reset_value: 0x2710
+  description: "Power-valid upper limit (8mV LSB)"
+  fields:
+    sign:
+      base: bool
+      start: 15
+      description: "Sign bit"
+
+    limit_data:
+      base: uint
+      start: 3
+      end: 15  # 12 bits (14-3)
+      description: "Upper limit value (12-bit, 8mV/LSB)"
+
+PowerValidLowerLimit:
+  # REG11H - Power-Valid Lower Limit
+  type: ref
+  target: PowerValidUpperLimit
+  description: "Power-valid lower limit"
+  override:
+    type: register
+    address: 0x11
+    reset_value: 0x2328
+
+# =============================================================================
+# ID Registers
+# =============================================================================
+
+ManufacturerId:
+  # REGFEH - Manufacturer ID
+  type: register
+  address: 0xFE
+  size_bits: 16
+  access: RO
+  reset_value: 0x5449
+  description: "Manufacturer ID (0x5449 = 'TI')"
+  fields:
+    manufacturer_id:
+      base: uint
+      start: 0
+      end: 16
+      description: "Texas Instruments manufacturer ID"
+
+DieId:
+  # REGFFH - Die ID
+  type: register
+  address: 0xFF
+  size_bits: 16
+  access: RO
+  reset_value: 0x3220
+  description: "Die ID (0x3220)"
+  fields:
+    die_id:
+      base: uint
+      start: 0
+      end: 16
+      description: "Unique die identification"
