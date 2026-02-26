@@ -1,6 +1,6 @@
 [package]
 name = "ina3221-dd"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "A driver for the INA3221 triple-channel current/voltage monitor (uses device-driver crate)"
 authors = ["Danila Gornushko <me@okhsunrog.dev>"]

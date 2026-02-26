@@ -94,8 +94,10 @@ where
         let raw_value = bus_data.bus_data() as u16;
         let sign = bus_data.sign();
 
+        // Register uses two's complement: when sign bit is set,
+        // magnitude = 2^12 - data_field (not data_field itself)
         let voltage_mv = if sign {
-            -(raw_value as f32 * BUS_VOLTAGE_LSB_MV)
+            -(((1u16 << 12) - raw_value) as f32 * BUS_VOLTAGE_LSB_MV)
         } else {
             raw_value as f32 * BUS_VOLTAGE_LSB_MV
         };
@@ -121,8 +123,10 @@ where
         let raw_value = shunt_data.shunt_data() as u16;
         let sign = shunt_data.sign();
 
+        // Register uses two's complement: when sign bit is set,
+        // magnitude = 2^12 - data_field (not data_field itself)
         let voltage_uv = if sign {
-            -(raw_value as f32 * SHUNT_VOLTAGE_LSB_UV)
+            -(((1u16 << 12) - raw_value) as f32 * SHUNT_VOLTAGE_LSB_UV)
         } else {
             raw_value as f32 * SHUNT_VOLTAGE_LSB_UV
         };
@@ -501,8 +505,10 @@ where
         let raw = data.sum_data() as u16;
         let sign = data.sign();
 
+        // Register uses two's complement: when sign bit is set,
+        // magnitude = 2^14 - data_field (sum register has 14-bit data)
         let voltage_uv = if sign {
-            -(raw as f32 * SHUNT_VOLTAGE_LSB_UV)
+            -(((1u32 << 14) - raw as u32) as f32 * SHUNT_VOLTAGE_LSB_UV)
         } else {
             raw as f32 * SHUNT_VOLTAGE_LSB_UV
         };
